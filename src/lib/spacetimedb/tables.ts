@@ -207,7 +207,11 @@ function normalizeSqlResponse(json: unknown, durationMs: number): SqlQueryResult
 /**
  * Loads and subscribes to a specific table's live mirror
  */
-export async function loadTableRows(tableName: string, highlightChanges = true): Promise<void> {
+export async function loadTableRows(
+  tableName: string,
+  highlightChanges = true,
+  isBackground = false,
+): Promise<void> {
   const host = connectionState.host;
   const database = connectionState.database;
   const token = connectionState.token;
@@ -216,10 +220,12 @@ export async function loadTableRows(tableName: string, highlightChanges = true):
   if (isFetchingRows) return; // Prevent re-entrancy / overlapping polling calls
 
   isFetchingRows = true;
-  setTableExplorerState((s) => {
-    s.isLoadingRows = true;
-    s.queryError = null;
-  });
+  if (!isBackground) {
+    setTableExplorerState((s) => {
+      s.isLoadingRows = true;
+      s.queryError = null;
+    });
+  }
 
   try {
     // SpacetimeDB SQL requires double quotes around identifiers to safely handle reserved keywords & case-sensitivity
@@ -296,12 +302,16 @@ export async function loadTableRows(tableName: string, highlightChanges = true):
       s.columns = currentTableMeta?.columns || [];
       s.lastUpdated = new Date().toLocaleTimeString();
       s.durationMs = result.durationMs;
-      s.isLoadingRows = false;
+      if (!isBackground) {
+        s.isLoadingRows = false;
+      }
     });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     setTableExplorerState((s) => {
-      s.isLoadingRows = false;
+      if (!isBackground) {
+        s.isLoadingRows = false;
+      }
       s.queryError = msg;
     });
   } finally {
@@ -368,7 +378,7 @@ export function startLiveSync(): void {
   liveSyncTimer = setInterval(async () => {
     const table = tableExplorerState.selectedTableName;
     if (table && connectionState.status === "connected") {
-      await loadTableRows(table, true);
+      await loadTableRows(table, true, true);
     }
   }, tableExplorerState.syncIntervalMs);
 }

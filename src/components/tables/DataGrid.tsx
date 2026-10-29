@@ -231,18 +231,27 @@ export function DataGrid(props: DataGridProps) {
             size="sm"
             onClick={() => toggleLiveSubscription()}
             title="Toggle live periodic SQL subscription"
+            class={css({ minW: "[116px]", justifyContent: "center" })}
           >
             <Show
               when={tableExplorerState.isLiveSync}
               fallback={
-                <HStack gap="1.5">
+                <HStack gap="1.5" alignItems="center">
                   <Play size={12} />
                   <span>Resume Sync</span>
                 </HStack>
               }
             >
-              <HStack gap="1.5">
-                <Box w="2" h="2" borderRadius="full" bg="white" />
+              <HStack gap="1.5" alignItems="center">
+                <Box
+                  w="2"
+                  h="2"
+                  borderRadius="full"
+                  bg="emerald.400"
+                  class={css({
+                    boxShadow: "[0_0_6px_rgba(52,211,153,0.8)]",
+                  })}
+                />
                 <Pause size={12} />
                 <span>Live (2s)</span>
               </HStack>
@@ -254,13 +263,14 @@ export function DataGrid(props: DataGridProps) {
             variant="outline"
             size="sm"
             onClick={() => {
-              if (props.tableMeta) loadTableRows(props.tableMeta.name, true);
+              if (props.tableMeta) loadTableRows(props.tableMeta.name, true, false);
             }}
             disabled={tableExplorerState.isLoadingRows}
             title="Refresh table snapshot"
+            class={css({ minW: "[90px]", justifyContent: "center" })}
           >
             <RefreshCw size={13} class={tableExplorerState.isLoadingRows ? spinAnimation : ""} />
-            <Show when={!tableExplorerState.isLoadingRows}>Refresh</Show>
+            <span>Refresh</span>
           </Button>
 
           {/* View Schema Modal Trigger */}
