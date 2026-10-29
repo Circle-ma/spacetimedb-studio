@@ -235,6 +235,23 @@ function formatPrimitive(name: string): {
 }
 
 /**
+ * Helper to unwrap SATS Option<string> or string names.
+ * In SpacetimeDB 2.13, names in typespace / schema are often serialized as `{ some: "fieldName" }` or string.
+ */
+export function extractSatsName(val: unknown, fallback: string): string {
+  if (typeof val === "string" && val.length > 0) return val;
+  if (val && typeof val === "object") {
+    if ("some" in val) {
+      const someVal = (val as { some: unknown }).some;
+      if (typeof someVal === "string" && someVal.length > 0) {
+        return someVal;
+      }
+    }
+  }
+  return fallback;
+}
+
+/**
  * Fetch and introspect the dynamic SpacetimeDB 2.x schema over HTTP
  */
 export async function introspectModuleSchema(
@@ -250,10 +267,27 @@ export async function introspectModuleSchema(
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${normHost}/v1/database/${encodeURIComponent(database)}/schema`, {
-    method: "GET",
-    headers,
-  });
+  let res = await fetch(
+    `${normHost}/v1/database/${encodeURIComponent(database)}/schema?version=9`,
+    {
+      method: "GET",
+      headers,
+    },
+  );
+
+  if (!res.ok && res.status === 400) {
+    // Fallback for older SpacetimeDB builds
+    const fallbackRes = await fetch(
+      `${normHost}/v1/database/${encodeURIComponent(database)}/schema`,
+      {
+        method: "GET",
+        headers,
+      },
+    );
+    if (fallbackRes.ok) {
+      res = fallbackRes;
+    }
+  }
 
   if (!res.ok) {
     const errorText = await res.text().catch(() => "");
@@ -261,26 +295,46 @@ export async function introspectModuleSchema(
   }
 
   const rawSchema = (await res.json()) as {
+    typespace?: { types?: unknown[] };
+    types?: unknown[];
     tables?: Array<Record<string, unknown>>;
     reducers?: Array<Record<string, unknown>>;
-    types?: unknown[];
   };
 
-  const typespace = rawSchema.types || [];
+  // Support both SpacetimeDB 2.13 typespace.types and older schema.types
+  const typespace = rawSchema.typespace?.types || rawSchema.types || [];
   const rawTables = rawSchema.tables || [];
   const rawReducers = rawSchema.reducers || [];
 
   const parsedTables: TableMeta[] = rawTables.map((t, index) => {
     const tableName = (t.name as string) || `table_${index}`;
-    const isSystemTable = tableName.startsWith("st_") || tableName.startsWith("__st_");
+    const isSystemTable =
+      tableName.startsWith("st_") ||
+      tableName.startsWith("__st_") ||
+      Boolean(
+        t.table_type && typeof t.table_type === "object" && "System" in (t.table_type as object),
+      );
 
-    // Extract product type elements
-    const productType = t.product_type as Record<string, unknown> | undefined;
+    // Extract product type elements: check product_type or resolve via product_type_ref
+    let productType = t.product_type as Record<string, unknown> | undefined;
+    if (!productType && typeof t.product_type_ref === "number") {
+      const refType = typespace[t.product_type_ref] as Record<string, unknown> | undefined;
+      productType = (refType?.Product as Record<string, unknown> | undefined) || refType;
+    }
     const elements = (productType?.elements as Array<Record<string, unknown>>) || [];
 
     // Extract primary key indices if available
     const indexes = (t.indexes as Array<Record<string, unknown>>) || [];
     const pkIndices = new Set<number>();
+    const pkNames = new Set<string>();
+
+    if (Array.isArray(t.primary_key)) {
+      for (const pk of t.primary_key) {
+        if (typeof pk === "number") pkIndices.add(pk);
+        else if (typeof pk === "string") pkNames.add(pk);
+      }
+    }
+
     for (const idx of indexes) {
       const isPk =
         (idx.name as string)?.includes("primary") ||
@@ -294,12 +348,13 @@ export async function introspectModuleSchema(
     let primaryKeyName: string | null = null;
 
     const columns: ColumnMeta[] = elements.map((elem, colIdx) => {
-      const colName = (elem.name as string) || `col_${colIdx}`;
+      const colName = extractSatsName(elem.name, `col_${colIdx}`);
       const algebraicType = elem.algebraic_type;
       const resolved = resolveAlgebraicType(algebraicType, typespace);
 
       const isPrimaryKey =
         pkIndices.has(colIdx) ||
+        pkNames.has(colName) ||
         colName.toLowerCase() === "id" ||
         colName.toLowerCase() === `${tableName.toLowerCase()}_id`;
 
@@ -337,7 +392,7 @@ export async function introspectModuleSchema(
     const elements = (paramsObj?.elements as Array<Record<string, unknown>>) || [];
 
     const params: ReducerParamMeta[] = elements.map((p, pIdx) => {
-      const pName = (p.name as string) || `param_${pIdx}`;
+      const pName = extractSatsName(p.name, `param_${pIdx}`);
       const pType = resolveAlgebraicType(p.algebraic_type, typespace);
       return {
         name: pName,
@@ -348,7 +403,14 @@ export async function introspectModuleSchema(
       };
     });
 
-    const isSystem = reducerName.startsWith("__") || reducerName.startsWith("st_");
+    const hasLifecycle =
+      r.lifecycle &&
+      typeof r.lifecycle === "object" &&
+      "some" in (r.lifecycle as object) &&
+      (r.lifecycle as { some: unknown }).some !== null;
+
+    const isSystem =
+      reducerName.startsWith("__") || reducerName.startsWith("st_") || Boolean(hasLifecycle);
 
     return {
       name: reducerName,

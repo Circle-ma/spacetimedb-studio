@@ -140,4 +140,3 @@ bun run preview
 - [x] **Phase 2: Live Table Explorer** (Dynamic SATS AST, fine-grained reactive grid, cell highlight animation, schema viewer)
 - [x] **Phase 3: Reducer Studio & Live Transaction Feed** (Form/JSON dual modes, RTT telemetry, audit logs, 1-click replay)
 - [x] **Phase 4: Interactive SQL Runner** (Ad-hoc query terminal, smart templates, history drawer, CSV/JSON export)
-

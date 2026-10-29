@@ -1,6 +1,6 @@
 import { createSignal, createStore } from "solid-js";
 import { connectionState, normalizeHost } from "./client";
-import type { ColumnMeta, ParsedModuleSchema } from "./schema";
+import { type ColumnMeta, extractSatsName, type ParsedModuleSchema } from "./schema";
 
 export interface SqlQueryResult {
   columns: string[];
@@ -120,21 +120,40 @@ function normalizeSqlResponse(json: unknown, durationMs: number): SqlQueryResult
     return { columns: [], rows: [], rowCount: 0, durationMs };
   }
 
-  const obj = json as Record<string, unknown>;
-
-  // Format 1: { schema: [{ name: "col1" }, ...], rows: [[val1, val2], ...] }
-  if (Array.isArray(obj.schema) && Array.isArray(obj.rows)) {
-    const colNames = obj.schema.map((c, i) => {
-      if (typeof c === "object" && c !== null && "name" in c) {
-        return String((c as { name: unknown }).name);
+  // Handle SpacetimeDB 2.x array response: [{ schema: { elements: [...] }, rows: [...] }]
+  let targetObj: Record<string, unknown> = json as Record<string, unknown>;
+  if (Array.isArray(json) && json.length > 0) {
+    const first = json[0];
+    if (first && typeof first === "object" && ("schema" in first || "rows" in first)) {
+      targetObj = first as Record<string, unknown>;
+      if (typeof targetObj.total_duration_micros === "number") {
+        durationMs = Math.round(targetObj.total_duration_micros / 1000);
       }
-      if (typeof c === "string") {
-        return c;
-      }
-      return `col_${i}`;
-    });
+    }
+  }
 
-    const rows = obj.rows.map((rowArr, rowIdx) => {
+  // Case 1: SpacetimeDB SQL response with schema and rows
+  if (targetObj.schema && Array.isArray(targetObj.rows)) {
+    let colNames: string[] = [];
+    const schemaObj = targetObj.schema as Record<string, unknown>;
+
+    if (Array.isArray(schemaObj)) {
+      // Legacy or flattened schema array: [{ name: ... }, ...]
+      colNames = schemaObj.map((c, i) => {
+        if (typeof c === "object" && c !== null && "name" in c) {
+          return extractSatsName((c as { name: unknown }).name, `col_${i}`);
+        }
+        if (typeof c === "string") return c;
+        return `col_${i}`;
+      });
+    } else if (schemaObj && Array.isArray(schemaObj.elements)) {
+      // SpacetimeDB 2.13 SATS schema: { elements: [{ name: { some: "name" } }] }
+      colNames = (schemaObj.elements as Array<Record<string, unknown>>).map((elem, i) =>
+        extractSatsName(elem.name, `col_${i}`),
+      );
+    }
+
+    const rows = (targetObj.rows as unknown[]).map((rowArr, rowIdx) => {
       const record: Record<string, unknown> = {};
       if (Array.isArray(rowArr)) {
         colNames.forEach((col, cIdx) => {
@@ -154,7 +173,7 @@ function normalizeSqlResponse(json: unknown, durationMs: number): SqlQueryResult
       rows,
       rowCount: rows.length,
       durationMs,
-      rawSchema: obj.schema,
+      rawSchema: targetObj.schema,
     };
   }
 

@@ -112,13 +112,24 @@ export async function testHttpHealth(
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const endpoint = `${normHost}/v1/database/${encodeURIComponent(database)}/schema`;
+  const endpoint = `${normHost}/v1/database/${encodeURIComponent(database)}/schema?version=9`;
 
   try {
-    const res = await fetch(endpoint, {
+    let res = await fetch(endpoint, {
       method: "GET",
       headers,
     });
+
+    if (!res.ok && res.status === 400) {
+      const fallbackEndpoint = `${normHost}/v1/database/${encodeURIComponent(database)}/schema`;
+      const fallbackRes = await fetch(fallbackEndpoint, {
+        method: "GET",
+        headers,
+      });
+      if (fallbackRes.ok) {
+        res = fallbackRes;
+      }
+    }
     const latency = Math.round(performance.now() - startTime);
 
     if (res.ok) {
