@@ -336,9 +336,9 @@ export async function introspectModuleSchema(
     }
 
     for (const idx of indexes) {
+      const idxName = extractSatsName(idx.name, "");
       const isPk =
-        (idx.name as string)?.includes("primary") ||
-        (idx.algorithm as Record<string, unknown>)?.BTree !== undefined;
+        idxName.toLowerCase().includes("primary") || idxName.toLowerCase().includes("pk");
       const cols = (idx.columns as number[]) || [];
       if (isPk && cols.length === 1) {
         pkIndices.add(cols[0]);

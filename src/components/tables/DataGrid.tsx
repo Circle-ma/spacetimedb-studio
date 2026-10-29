@@ -679,16 +679,23 @@ function CellRenderer(props: CellRendererProps) {
     if (v === null || v === undefined) return "null";
     if (v === "") return "empty_string";
     if (typeof v === "boolean") return "boolean";
+
+    const unwrapped = Array.isArray(v) && v.length === 1 ? v[0] : v;
+
     if (
       props.column.category === "identity" ||
-      (typeof v === "string" && v.length >= 32 && /^[0-9a-fA-F]+$/.test(v))
+      (typeof unwrapped === "string" &&
+        (unwrapped.startsWith("0x") || unwrapped.length >= 32) &&
+        /^[0-9a-fA-Fx]+$/.test(unwrapped))
     ) {
       return "identity";
     }
-    if (props.column.category === "timestamp") {
-      const num = Number(v);
-      if (!Number.isNaN(num) && num > 1000000000) return "timestamp";
+
+    const num = Number(unwrapped);
+    if (!Number.isNaN(num) && (props.column.category === "timestamp" || num > 1000000000000)) {
+      return "timestamp";
     }
+
     if (typeof v === "object") return "object";
     if (typeof v === "bigint" || (typeof v === "number" && !Number.isNaN(v))) {
       return "number";
@@ -722,45 +729,60 @@ function CellRenderer(props: CellRendererProps) {
       </Match>
 
       <Match when={valueType() === "identity"}>
-        <HStack gap="1" alignItems="center">
-          <span
-            class={css({
-              fontFamily: "mono",
-              color: "accent.default",
-              fontSize: "2xs",
-            })}
-            title={String(props.value)}
-          >
-            {String(props.value).slice(0, 8)}...{String(props.value).slice(-6)}
-          </span>
-          <button
-            type="button"
-            class={css({
-              cursor: "pointer",
-              p: "0.5",
-              bg: "transparent",
-              border: "none",
-              color: "fg.muted",
-              _hover: { color: "fg.default" },
-            })}
-            onClick={() => props.onCopy(String(props.value))}
-            title="Copy full Identity"
-          >
-            <Show when={props.isCopied} fallback={<Copy size={11} />}>
-              <Check size={11} color="var(--colors-accent-default)" />
-            </Show>
-          </button>
-        </HStack>
+        {(() => {
+          const rawVal =
+            Array.isArray(props.value) && props.value.length === 1
+              ? String(props.value[0])
+              : String(props.value);
+          const cleanHex = rawVal.replace(/^0x/, "");
+          const displayHex = `0x${cleanHex.slice(0, 8)}...${cleanHex.slice(-6)}`;
+          return (
+            <HStack gap="1" alignItems="center">
+              <span
+                class={css({
+                  fontFamily: "mono",
+                  color: "accent.default",
+                  fontSize: "2xs",
+                })}
+                title={rawVal}
+              >
+                {displayHex}
+              </span>
+              <button
+                type="button"
+                class={css({
+                  cursor: "pointer",
+                  p: "0.5",
+                  bg: "transparent",
+                  border: "none",
+                  color: "fg.muted",
+                  _hover: { color: "fg.default" },
+                })}
+                onClick={() => props.onCopy(rawVal)}
+                title="Copy full Identity"
+              >
+                <Show when={props.isCopied} fallback={<Copy size={11} />}>
+                  <Check size={11} color="var(--colors-accent-default)" />
+                </Show>
+              </button>
+            </HStack>
+          );
+        })()}
       </Match>
 
       <Match when={valueType() === "timestamp"}>
-        <span class={css({ fontFamily: "mono", fontSize: "2xs" })} title={String(props.value)}>
-          {new Date(
-            Number(props.value) > 100000000000000
-              ? Math.floor(Number(props.value) / 1000)
-              : Number(props.value),
-          ).toLocaleString()}
-        </span>
+        {(() => {
+          const rawVal =
+            Array.isArray(props.value) && props.value.length === 1 ? props.value[0] : props.value;
+          const num = Number(rawVal);
+          const dateMs = num > 100000000000000 ? Math.floor(num / 1000) : num;
+          const d = new Date(dateMs);
+          return (
+            <span class={css({ fontFamily: "mono", fontSize: "2xs" })} title={String(rawVal)}>
+              {Number.isNaN(d.getTime()) ? String(rawVal) : d.toLocaleString()}
+            </span>
+          );
+        })()}
       </Match>
 
       <Match when={valueType() === "object"}>
