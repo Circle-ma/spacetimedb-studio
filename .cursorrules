@@ -1,0 +1,61 @@
+# Modern Fullstack AI Assistant Directives (2026 Paved Path Edition)
+
+You are an expert fullstack engineer working in this codebase.
+You MUST adhere strictly to the following architectural rules:
+
+## 1. Toolchain & Runtime
+- **Architecture**: Solid 2.0 Start-Mode SPA (`start: true, ssr: false`). Follows the official 2.0 unified convention (`src/Document.tsx` shell + `src/App.tsx` root), enabling instant 1-boolean migration to streaming SSR (`ssr: true`).
+- **Runtime**: Bun (`bun`, `bunx`). Do not emit `npm`, `yarn`, or `npx`.
+- **Linter**: Oxlint (`oxlint src`). Never add ESLint configs.
+- **Formatter**: Biome (`biome format --write .`). Never add Prettier configs.
+
+## 2. Solid.js 2.0 Core Rules
+- **Props**: Always read props directly as `props.value`. NEVER destructure props (`function C({ name })` is BANNED).
+- **Props Forwarding**: Use `omit(props, ...keys)` with rest parameters (`const rest = omit(props, "class", "children")`). `splitProps` was removed in Solid 2.0.
+- **Reactivity**: Computations and `createMemo` can return Promises natively. Do NOT use `createResource`.
+- **Boundaries**: Use `<Loading>` for async fallback states and `<Errored>` for error boundaries. Do NOT use `<Suspense>` or `<ErrorBoundary>`.
+- **Effects**: `createEffect` takes two functions: `createEffect(() => dep(), val => { ... })`.
+- **Stores**: Modify stores directly inside the draft setter: `setStore(draft => { draft.prop = val; })`.
+- **Web Package**: Import Dynamic and Portal from `@solidjs/web`, not `solid-js/web`.
+
+## 3. The Paved Path UI Manifesto: 鋪鐵軌而非設陷阱 (Lay the Rails, Don't Set Traps)
+- **Zero Magic Numbers & Zero Hex Colors**:
+  - `strictTokens: true` and `strictPropertyValues: true` are enforced by the TypeScript compiler.
+  - NEVER write magic pixel values like `padding: "13px"` or `gap: "17px"`.
+  - NEVER write hardcoded colors like `color: "#3b82f6"` or `bg: "rgb(...)"`.
+  - ALWAYS use semantic tokens from `~/components/ui/tokens`:
+    - Spacing: `"0"`, `"1"` (4px), `"1.5"` (6px), `"2"` (8px), `"3"` (12px), `"4"` (16px), `"5"` (20px), `"6"` (24px), `"8"` (32px), `"10"` (40px), `"12"` (48px).
+    - Surfaces: `"bg.canvas"`, `"bg.default"`, `"bg.subtle"`, `"bg.muted"`.
+    - Foregrounds: `"fg.default"`, `"fg.muted"`, `"fg.subtle"`.
+    - Borders: `"border.subtle"`, `"border.default"`.
+    - Accents: `"accent.default"`, `"accent.emphasized"`, `"accent.fg"`.
+- **宣告 Margin 死亡 (Declare Margin Dead)**:
+  - Components MUST NEVER control their outside spacing. Zero `margin`, `mt`, `mb`, `ml`, `mr`, `mx`, `my`.
+  - Spacing between siblings is 100% orchestrated by parent layout containers using `gap`.
+- **佈局只走鐵軌容器 (Layout Rails via `~/components/ui`)**:
+  - Use verified Solid 2.0 layout containers: `<Container>`, `<VStack>`, `<HStack>`, `<Grid>`, `<Box>`, `<Divider>`.
+  - NEVER import layout primitives from `styled-system/jsx` (Panda's factory is Solid 1.x-only).
+- **複合組件的「不變量骨架」(Compound Component Invariants)**:
+  - `<Card.Root>`: Invariant 24px padding (`p="6"`), `gap="6"`, border, and shadow.
+  - `<Dialog.Content>`: Invariant 24px padding (`p="6"`), `gap="5"`, `maxW="md"`, subtle border, elevation shadow.
+  - NEVER manually wrap an outer `<VStack>` inside `<Dialog.Content>` or `<Card.Root>`.
+- **Typography & Primitives First**:
+  - Raw unstyled `<button>`, `<p>`, `<span>`, `<h1>`-`<h6>` tags are BANNED.
+  - Use `<Heading>`, `<Text>`, `<Code>`, `<Button>`, and `<Badge>` from `~/components/ui`.
+- **Zero Tailwind**: NEVER use Tailwind CSS classes (`flex`, `p-4`, `bg-blue-500` etc. are forbidden).
+
+## 4. Headless UI (Ark UI + Panda CSS Recipes)
+- **Autonomous Modal Slots**:
+  - `<Dialog.Header>`: Tight column (`gap="1.5"`), with `pr="8"` reserved for the top-right X button.
+  - `<Dialog.Title>`: Semibold high-contrast heading (`fontSize="lg"`).
+  - `<Dialog.Description>`: Muted secondary context (`fontSize="sm"`, `color="fg.muted"`).
+  - `<Dialog.Body>`: High-contrast primary message region (`fontSize="sm"`, `color="fg.default"`).
+  - `<Dialog.Footer>`: Right-aligned action container (`justifyContent="flex-end"`, `gap="3"`, `pt="2"`).
+  - `<Dialog.CloseTrigger>`: Dual-mode. Without children, renders the top-right X icon button. With children, renders custom action buttons.
+- **Modal Lifecycle**: Modals operate headlessly via Zag.js state machines. `<Dialog.Portal>` internally encapsulates `<Show when={dialog().open}>` and `<SolidPortal>`, guaranteeing 100% clean physical DOM teardown on ESC or dismissal with zero ghost overlays and zero signal boilerplate. Style triggers with typesafe variants (`<Dialog.Trigger variant="outline">`) or `<Button>`. NEVER pass boolean `asChild`.
+
+## 5. Backend & Data Layer: Schema 為單一真理來源 (Schema as SSOT)
+- **Ban Arbitrary API Types**: NEVER handcraft loose, arbitrary `interface Record { ... }` or `type ApiPayload = { ... }` in component or service files.
+- **Schema as Single Source of Truth**: All database tables, reducers, and RPC contracts MUST be formally defined in `src/schema/` (or generated from `spacetime generate` / `.proto`).
+- **SpacetimeDB**: Real-time client synchronization runs through WebSocket subscriptions with fine-grained Solid 2.0 store bindings. Local in-memory cache acts as fallback.
+- **ConnectRPC**: Use type-safe Connect clients (`@connectrpc/connect-web`) with schemas for microservices and third-party APIs (e.g. Stripe checkout).

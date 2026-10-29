@@ -1,0 +1,18 @@
+# Solid.js 2.0 AI Instructions & API Guide
+
+## Core Principles
+1. **Async-first Reactivity**: Computations and `createMemo` can return Promises directly. The reactive graph handles pending/suspension natively.
+2. **Boundary Replacement**:
+   - Replace `<Suspense>` with `<Loading fallback={<Spinner />}>`.
+   - Replace `<ErrorBoundary>` with `<Errored fallback={(err, reset) => <ErrorView error={err} onRetry={reset} />}>`.
+3. **Props are read, never destructured**:
+   - Incorrect: `function Button({ label, onClick }) { ... }`
+   - Correct: `function Button(props) { return <button onClick={props.onClick}>{props.label}</button>; }`
+4. **Split `createEffect`**:
+   - Takes two functions: compute (tracks dependencies), then apply (runs side effect).
+   - `createEffect(() => count(), v => { el.title = v; });`
+5. **Draft Stores**:
+   - `setStore(draft => { draft.user.name = "New Name"; });`
+   - No `produce` wrapper needed.
+6. **Optimistic Updates**:
+   - Use `createOptimisticStore(() => api.list(), [])` or `action(...)` primitives.

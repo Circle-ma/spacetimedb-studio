@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "panda": {
+      "command": "bunx",
+      "args": ["@pandacss/mcp", "--config", "./panda.config.ts"]
+    },
+    "ark-ui": {
+      "command": "bunx",
+      "args": ["@ark-ui/mcp"]
+    },
+    "spacetimedb": {
+      "command": "spacetime",
+      "args": ["mcp"]
+    }
+  }
+}

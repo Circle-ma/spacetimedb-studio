@@ -1,0 +1,34 @@
+# Project Index for LLMs & AI Agents
+
+> Solid 2.0 + Ark UI + Panda CSS 2.4 + SpacetimeDB + ConnectRPC Starter
+> 2026 Modern SPA Foundation (Paved Path Edition)
+
+## Architecture Overview
+- Runtime: Bun
+- Architecture: Solid 2.0 Start-Mode SPA (`Document.tsx` + `App.tsx`, 1-boolean SSR readiness)
+- Reactivity: Solid.js 2.0 (Zero VDOM, fine-grained signals)
+- UI Primitives: Ark UI 5.x (Zag.js state machines) & Panda CSS native recipes
+- Styling: Panda CSS with `strictTokens: true` & `strictPropertyValues: true`
+- Realtime Database: SpacetimeDB 2.x
+- RPC Transport: ConnectRPC
+- Lint & Format: Oxlint & Biome 2.6
+
+## Design System Rails (鋪鐵軌而非設陷阱)
+1. **Zero Magic Numbers & Zero Hex Codes**:
+   - `padding: "13px"` and `color: "#3b82f6"` are rejected at compile time.
+   - All properties must use tokens from `~/components/ui/tokens`.
+2. **宣告 Margin 死亡 (Declare Margin Dead)**:
+   - Zero `margin`, `mt`, `mb`. Spacing is exclusively orchestrated via parent `<Container>`, `<VStack>`, `<HStack>`, `<Grid>` using `gap`.
+3. **Compound Invariants**:
+   - `<Card.Root>` and `<Dialog.Content>` encapsulate their own padding, gaps, and borders.
+4. **Typography First**:
+   - Never use raw `<p>`, `<span>`, `<h1>`. Use `<Heading>`, `<Text>`, and `<Code>`.
+5. **Schema SSOT**:
+   - All database, reducer, and API types derive from `src/schema/`.
+
+## Deep-Dive Knowledge Links
+- [Panda CSS 2.4 Design System Guide](docs/ai/llms-panda-css.txt)
+- [Ark UI Headless Components & State Machine Guide](docs/ai/llms-ark-ui.txt)
+- [Solid.js 2.0 Core Guide](docs/ai/llms-solid-2.0.txt)
+- [SpacetimeDB Realtime Guide](docs/ai/llms-spacetimedb.txt)
+- [ConnectRPC Guide](docs/ai/llms-connect-rpc.txt)

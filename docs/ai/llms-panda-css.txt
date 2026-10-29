@@ -1,0 +1,59 @@
+# Panda CSS 2.4 Design System Guide (Paved Path Edition)
+
+## Philosophy: 鋪鐵軌而非設陷阱 (Lay the Rails, Don't Set Traps)
+UI layouts should be scientific, rational, and bounded by a closed-world design token system.
+Freedom of arbitrary styling leads to layout entropy, broken responsive behavior, and visual chaos.
+By converging degrees of freedom into strict compiler-enforced rails, AI agents and engineers produce pixel-perfect, consistent, and error-free layouts on the first try.
+
+## Official Endpoints
+- Index: https://panda-css.com/llms-full.txt
+- MCP Server: `@pandacss/mcp` (run via `bunx @pandacss/mcp`)
+- Skills: `chakra-ui/panda` (`panda-css`, `panda-css-theming`, `panda-css-migrate`)
+
+## The Six Invariant Commandments
+
+### 1. 禁絕魔術數字與硬編碼色彩 (Zero Magic Numbers & Zero Hex Codes)
+- **Compile-Time Railguard**: `strictTokens: true` and `strictPropertyValues: true` are enabled in `panda.config.ts`.
+- **FORBIDDEN**:
+  - `padding: '13px'`, `gap: '17px'`, `top: '23px'` (Magic numbers fail TypeScript compilation).
+  - `color: '#3b82f6'`, `bg: 'rgb(59, 130, 246)'` (Hex/RGB codes fail TypeScript compilation).
+- **MANDATORY**: Use semantic design tokens only:
+  - Spacing Scale: `"0"`, `"1"` (4px), `"1.5"` (6px), `"2"` (8px), `"3"` (12px), `"4"` (16px), `"5"` (20px), `"6"` (24px), `"8"` (32px), `"10"` (40px), `"12"` (48px).
+  - Surfaces: `"bg.canvas"`, `"bg.default"`, `"bg.subtle"`, `"bg.muted"`.
+  - Foregrounds: `"fg.default"`, `"fg.muted"`, `"fg.subtle"`.
+  - Borders: `"border.subtle"`, `"border.default"`.
+  - Accents: `"accent.default"`, `"accent.emphasized"`, `"accent.fg"`.
+
+### 2. 宣告 Margin 死亡 (Declare Margin Dead)
+- Components MUST NEVER control their outside spacing.
+- `margin`, `mt`, `mb`, `ml`, `mr`, `mx`, `my` are STRICTLY FORBIDDEN.
+- Outside spacing between siblings is 100% orchestrated by parent layout containers using `gap`.
+- Inside breathing room is 100% orchestrated by container `p`, `px`, `py`.
+
+### 3. 佈局只走鐵軌容器 (Layout Rails via `~/components/ui`)
+All layout structure must use verified, zero-overhead Solid 2.0 containers from `~/components/ui`:
+- `<Container maxW="860px">`: Horizontal page centering and responsive constraints.
+- `<VStack gap="4" alignItems="stretch">`: 1D vertical column flow.
+- `<HStack gap="3" alignItems="center">`: 1D horizontal row flow.
+- `<Grid columns={2} gap="6">`: 2D multi-column responsive grid.
+- `<Box>`: Viewport boundaries, backgrounds, and canvas wrappers only.
+- `<Divider />`: Semantic hairline boundary between sections.
+*Do NOT import from `styled-system/jsx` because Panda's factory is Solid 1.x-only.*
+
+### 4. 複合組件的「不變量骨架」(Compound Component Invariants)
+Complex multi-part components encapsulate their internal spatial rhythm and hierarchy:
+- **Card**: `<Card.Root>` has baked-in 24px padding (`p="6"`), `gap="6"`, subtle border, and card shadow.
+- **Dialog**: `<Dialog.Content>` has baked-in 24px padding (`p="6"`), `gap="5"`, `maxW="md"`, subtle border, elevation shadow, and automatic top-right close trigger (`<Dialog.CloseTrigger />`).
+*Never manually wrap `<VStack>` inside `<Dialog.Content>` or `<Card.Root>`.*
+
+### 5. Typography First
+- Raw unstyled `<p>`, `<span>`, `<h1>`-`<h6>` tags are BANNED.
+- Always use semantic primitives from `~/components/ui/typography`:
+  - `<Heading as="h1" size="2xl">`: Page and section titles.
+  - `<Text size="sm" color="fg.muted">`: Body copy and explanatory text.
+  - `<Code size="xs">`: Telemetry, identifiers, and timestamps.
+
+### 6. Solid 2.0 Props & Reactivity
+- Props must be read directly as `props.value` (Never destructure).
+- Forward props via `const rest = omit(props, "class", "children")` from `"solid-js"`.
+- Modals operate headlessly via Zag.js state machines. `<Dialog.Portal>` internally binds to `useDialogContext()` and `<Show when={dialog().open}>`, guaranteeing 100% clean physical DOM teardown on ESC or dismissal with zero ghost overlays and zero signal boilerplate.

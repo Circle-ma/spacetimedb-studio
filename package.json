@@ -1,0 +1,41 @@
+{
+  "name": "spacetimedb-studio",
+  "version": "1.0.0",
+  "description": "SpacetimeDB 2.x Universal Real-time Visual Admin Studio (Solid 2.0, Panda CSS, Ark UI, Bun)",
+  "type": "module",
+  "scripts": {
+    "dev": "panda codegen && vite",
+    "build": "panda codegen && vite build",
+    "preview": "vite preview",
+    "lint": "oxlint src",
+    "format": "biome format --write .",
+    "check": "oxlint src && biome check .",
+    "typecheck": "tsc --noEmit"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.3",
+    "@pandacss/dev": "^2.4.0",
+    "@pandacss/preset-base": "^2.4.0",
+    "@pandacss/preset-panda": "^2.4.0",
+    "@pandacss/vite": "^2.4.0",
+    "@solidjs/diagnostics": "^2.0.0-rc.19",
+    "@solidjs/vite-plugin": "3.0.0-next.52",
+    "@types/node": "^26.6.6",
+    "eslint-plugin-solid": "~0.18.1",
+    "oxlint": "^1.90.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.5"
+  },
+  "dependencies": {
+    "@ark-ui/solid": "^5.39.3",
+    "@solidjs/router": "2.0.0-next.43",
+    "@solidjs/web": "^2.0.0-rc.19",
+    "lucide-solid": "^1.63.0",
+    "solid-js": "^2.0.0-rc.19",
+    "spacetimedb": "^2.13.0"
+  },
+  "patchedDependencies": {
+    "solid-js@2.0.0-rc.19": "patches/solid-js@2.0.0-rc.19.patch"
+  }
+}

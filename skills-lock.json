@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "skills": {
+    "panda-css": {
+      "source": "chakra-ui/panda",
+      "sourceType": "github",
+      "skillPath": "skills/panda-css/SKILL.md"
+    },
+    "panda-css-migrate": {
+      "source": "chakra-ui/panda",
+      "sourceType": "github",
+      "skillPath": "skills/panda-css-migrate/SKILL.md"
+    },
+    "panda-css-theming": {
+      "source": "chakra-ui/panda",
+      "sourceType": "github",
+      "skillPath": "skills/panda-css-theming/SKILL.md"
+    },
+    "solid-2.0": {
+      "source": "solidjs/solid",
+      "sourceType": "npm",
+      "skillPath": "skills/solid-2.0/SKILL.md"
+    },
+    "solid-2.0-cheatsheet": {
+      "source": "solidjs/solid",
+      "sourceType": "npm",
+      "skillPath": "skills/solid-2.0-cheatsheet/SKILL.md"
+    },
+    "reactivity-diagnostics": {
+      "source": "solidjs/solid",
+      "sourceType": "npm",
+      "skillPath": "skills/reactivity-diagnostics/SKILL.md"
+    },
+    "agent-loops": {
+      "source": "@solidjs/diagnostics",
+      "sourceType": "npm",
+      "skillPath": "skills/agent-loops/SKILL.md"
+    },
+    "ark-ui-solid": {
+      "source": "local",
+      "sourceType": "project",
+      "skillPath": "skills/ark-ui-solid/SKILL.md"
+    },
+    "spacetimedb": {
+      "source": "local",
+      "sourceType": "project",
+      "skillPath": "skills/spacetimedb/SKILL.md"
+    }
+  }
+}

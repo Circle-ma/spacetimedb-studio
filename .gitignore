@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Generated Design System
+styled-system/
+
+# Production Build Output
+dist/
+.output/
+
+# Logs & Temp
+*.log
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env*.local
+
+# Editor directories
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json

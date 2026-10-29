@@ -1,0 +1,355 @@
+diff --git a/dist/server.dev.js b/dist/server.dev.js
+index a8f6cf704514d34da5f589a5de224685589d111a..ef326e56093c01738390ba2ac431041a7e902923 100644
+--- a/dist/server.dev.js
++++ b/dist/server.dev.js
+@@ -2434,6 +2434,7 @@ function createContext(defaultValue, options) {
+   }
+   provider.id = id;
+   provider.defaultValue = defaultValue;
++  provider.Provider = provider;
+   if (arguments.length && defaultValue === undefined) provider._undefinedDefault = true;
+   return provider;
+ }
+@@ -3912,7 +3913,7 @@ function forwardIteratorReturn(it, value) {
+     value
+   });
+ }
+-{
++if (OBSERVE$1) {
+   OBSERVE$1.server = serverSlots();
+   installServerWithOrigin(OBSERVE$1);
+ }
+@@ -3920,4 +3921,43 @@ const OBSERVE = OBSERVE$1 ;
+ const DEV = DEV$1 ;
+ installConsoleFooter();
+ 
+-export { $DEVCOMP, DEV, Errored, For, Hydration, Loading, Match, NoHydration, OBSERVE, ROOT_ERROR_HOOK, Repeat, Reveal, Show, Switch, UNASKED, action, adoptedAnswerStream, affects, applyPatches, beginEdgesRender, children, configureClientErrors, createComponent, createContext, createDeepProxy, createDeferred, createEffect, createErrorBoundary, createLoadingBoundary, createMemo, createOptimistic, createOptimisticStore, createOwner, createProjection, createReaction, createRenderEffect, createRevealOrder, createRoot, createSignal, createStore, createTrackedEffect, createUniqueId, creationStamp, deep, dynamicComponent, dynamicCore, enableHydration, enableServerComponentHydration, flush, forwardIteratorReturn, from, getNextChildId, getObserver, getOwner, getProjectionTrace, hasLoadingWindow, inLiveServerComponentScope, inServerComponentScope, isAsyncIterable, isDisposed, isHydratable, isHydrating, isPending, latest, lazy, lazyModule, mapArray, markTopLevelSnapshotScope, merge, noHydrationId, onCleanup, onFlush, onHydrationEnd, onSettled, readHydratedValue, readSerializedOrCompute, reconcile, refresh, repeat, reportServerError, resetErrorHalt, resolve, runInServerComponentScope, runWithOwner, setReadWatch, setSignalIdentities, setWriteHook, shareAsyncIterable, sharedConfig, signalName, ssrHandleError, ssrSanitizeError, ssrScope, storeName, subFetch, syncThenable, trackFillReads, until, untrack, useContext, withHydrationGate, wrapFirstYield };
++export { $DEVCOMP, DEV, Errored, For, Hydration, Loading, Match, NoHydration, OBSERVE, ROOT_ERROR_HOOK, Repeat, Reveal, Show, Switch, UNASKED, action, adoptedAnswerStream, affects, applyPatches, beginEdgesRender, children, configureClientErrors, createComponent, createContext, createDeepProxy, createDeferred, /* createEffect, */ createErrorBoundary, createLoadingBoundary, createMemo, createOptimistic, createOptimisticStore, createOwner, createProjection, createReaction, createRenderEffect, createRevealOrder, createRoot, createSignal, createStore, createTrackedEffect, createUniqueId, creationStamp, deep, dynamicComponent, dynamicCore, enableHydration, enableServerComponentHydration, flush, forwardIteratorReturn, from, getNextChildId, getObserver, getOwner, getProjectionTrace, hasLoadingWindow, inLiveServerComponentScope, inServerComponentScope, isAsyncIterable, isDisposed, isHydratable, isHydrating, isPending, latest, lazy, lazyModule, mapArray, markTopLevelSnapshotScope, merge, noHydrationId, onCleanup, onFlush, onHydrationEnd, onSettled, readHydratedValue, readSerializedOrCompute, reconcile, refresh, repeat, reportServerError, resetErrorHalt, resolve, runInServerComponentScope, runWithOwner, setReadWatch, setSignalIdentities, setWriteHook, shareAsyncIterable, sharedConfig, signalName, ssrHandleError, ssrSanitizeError, ssrScope, storeName, subFetch, syncThenable, trackFillReads, until, untrack, useContext, withHydrationGate, wrapFirstYield };
++
++function compatCreateEffect(compute, effect, options) {
++  if (typeof effect !== "function") {
++    return createRenderEffect(compute, () => {}, options);
++  }
++  return _origCreateEffect(compute, effect, options);
++}
++
++function onMount() {}
++const compatOn = (_deps, _fn) => () => {};
++function splitProps(props, ...descriptors) {
++  const result = descriptors.map(() => ({}));
++  const other = {};
++  const keys = new Set(descriptors.flat());
++  const allKeys = Object.keys(props);
++  for (const key of allKeys) {
++    if (!keys.has(key)) {
++      Object.defineProperty(other, key, {
++        get: () => props[key],
++        enumerable: true,
++        configurable: true,
++      });
++    }
++  }
++  for (let i = 0; i < descriptors.length; i++) {
++    for (const key of descriptors[i]) {
++      Object.defineProperty(result[i], key, {
++        get: () => props[key],
++        enumerable: true,
++        configurable: true,
++      });
++    }
++  }
++  result.push(other);
++  return result;
++}
++const compatEffect = () => {};
++function mergeProps(...sources) { return merge(...sources); }
++export { onMount, splitProps, compatOn as on, compatEffect as createEffect, mergeProps };
+diff --git a/dist/server.js b/dist/server.js
+index 306cf2909918be709616ef63b61ac54d7271ed50..1d33c860c92c060cddf1dccffff38a9e98d5ac64 100644
+--- a/dist/server.js
++++ b/dist/server.js
+@@ -2258,6 +2258,7 @@ function createContext(defaultValue, options) {
+   }
+   provider.id = id;
+   provider.defaultValue = defaultValue;
++  provider.Provider = provider;
+   return provider;
+ }
+ function useContext(context) {
+@@ -3555,4 +3556,43 @@ function forwardIteratorReturn(it, value) {
+ const OBSERVE = undefined;
+ const DEV = undefined;
+ 
+-export { $DEVCOMP, DEV, Errored, For, Hydration, Loading, Match, NoHydration, OBSERVE, ROOT_ERROR_HOOK, Repeat, Reveal, Show, Switch, UNASKED, action, adoptedAnswerStream, affects, applyPatches, beginEdgesRender, children, configureClientErrors, createComponent, createContext, createDeepProxy, createDeferred, createEffect, createErrorBoundary, createLoadingBoundary, createMemo, createOptimistic, createOptimisticStore, createOwner, createProjection, createReaction, createRenderEffect, createRevealOrder, createRoot, createSignal, createStore, createTrackedEffect, createUniqueId, creationStamp, deep, dynamicComponent, dynamicCore, enableHydration, enableServerComponentHydration, flush, forwardIteratorReturn, from, getNextChildId, getObserver, getOwner, getProjectionTrace, hasLoadingWindow, inLiveServerComponentScope, inServerComponentScope, isAsyncIterable, isDisposed, isHydratable, isHydrating, isPending, latest, lazy, lazyModule, mapArray, markTopLevelSnapshotScope, merge, noHydrationId, onCleanup, onFlush, onHydrationEnd, onSettled, readHydratedValue, readSerializedOrCompute, reconcile, refresh, repeat, reportServerError, resetErrorHalt, resolve, runInServerComponentScope, runWithOwner, setReadWatch, setSignalIdentities, setWriteHook, shareAsyncIterable, sharedConfig, signalName, ssrHandleError, ssrSanitizeError, ssrScope, storeName, subFetch, syncThenable, trackFillReads, until, untrack, useContext, withHydrationGate, wrapFirstYield };
++export { $DEVCOMP, DEV, Errored, For, Hydration, Loading, Match, NoHydration, OBSERVE, ROOT_ERROR_HOOK, Repeat, Reveal, Show, Switch, UNASKED, action, adoptedAnswerStream, affects, applyPatches, beginEdgesRender, children, configureClientErrors, createComponent, createContext, createDeepProxy, createDeferred, /* createEffect, */ createErrorBoundary, createLoadingBoundary, createMemo, createOptimistic, createOptimisticStore, createOwner, createProjection, createReaction, createRenderEffect, createRevealOrder, createRoot, createSignal, createStore, createTrackedEffect, createUniqueId, creationStamp, deep, dynamicComponent, dynamicCore, enableHydration, enableServerComponentHydration, flush, forwardIteratorReturn, from, getNextChildId, getObserver, getOwner, getProjectionTrace, hasLoadingWindow, inLiveServerComponentScope, inServerComponentScope, isAsyncIterable, isDisposed, isHydratable, isHydrating, isPending, latest, lazy, lazyModule, mapArray, markTopLevelSnapshotScope, merge, noHydrationId, onCleanup, onFlush, onHydrationEnd, onSettled, readHydratedValue, readSerializedOrCompute, reconcile, refresh, repeat, reportServerError, resetErrorHalt, resolve, runInServerComponentScope, runWithOwner, setReadWatch, setSignalIdentities, setWriteHook, shareAsyncIterable, sharedConfig, signalName, ssrHandleError, ssrSanitizeError, ssrScope, storeName, subFetch, syncThenable, trackFillReads, until, untrack, useContext, withHydrationGate, wrapFirstYield };
++
++function compatCreateEffect(compute, effect, options) {
++  if (typeof effect !== "function") {
++    return createRenderEffect(compute, () => {}, options);
++  }
++  return _origCreateEffect(compute, effect, options);
++}
++
++function onMount() {}
++function on(deps, fn) { return () => {}; }
++function splitProps(props, ...descriptors) {
++  const result = descriptors.map(() => ({}));
++  const other = {};
++  const keys = new Set(descriptors.flat());
++  const allKeys = Object.keys(props);
++  for (const key of allKeys) {
++    if (!keys.has(key)) {
++      Object.defineProperty(other, key, {
++        get: () => props[key],
++        enumerable: true,
++        configurable: true,
++      });
++    }
++  }
++  for (let i = 0; i < descriptors.length; i++) {
++    for (const key of descriptors[i]) {
++      Object.defineProperty(result[i], key, {
++        get: () => props[key],
++        enumerable: true,
++        configurable: true,
++      });
++    }
++  }
++  result.push(other);
++  return result;
++}
++function createEffect() {}
++function mergeProps(...sources) { return merge(...sources); }
++export { onMount, splitProps, on, createEffect, mergeProps };
+diff --git a/dist/solid.dev.js b/dist/solid.dev.js
+index 14ae6f6bf5fc3c9e725869782f8986a8476adb54..336aa0feef1d42c6fbbec71adcd60476cb246887 100644
+--- a/dist/solid.dev.js
++++ b/dist/solid.dev.js
+@@ -1,3 +1,4 @@
++import { onSettled, merge, createEffect as _origCreateEffect } from "@solidjs/signals";
+ import { from as from$1, createMemo as createMemo$1, flatten, getContext, createRoot as createRoot$1, getOwner, OBSERVE as OBSERVE$1, untrack, setContext, peekNextChildId, createSignal as createSignal$1, setSnapshotCapture, createOwner, runWithOwner, createDeferred as createDeferred$1, createEffect as createEffect$1, createErrorBoundary as createErrorBoundary$1, createLoadingBoundary as createLoadingBoundary$1, createOptimistic as createOptimistic$1, createOptimisticStore as createOptimisticStore$1, createProjection as createProjection$1, createRenderEffect as createRenderEffect$1, createRevealOrder as createRevealOrder$1, createStore as createStore$1, releaseSnapshotScope, markSnapshotScope, clock, NotReadyError, getNextChildId, clearSnapshots, flush, onCleanup, isDisposed, repeat, mapArray, DEV as DEV$1, setConsoleFooter } from '@solidjs/signals';
+ export { $PROXY, $TRACK, NotReadyError, ROOT_ERROR_HOOK, TimeoutError, action, affects, configureClientErrors, createOwner, createReaction, createTrackedEffect, deep, enableExternalSource, enforceLoadingBoundary, flatten, flush, getNextChildId, getObserver, getOwner, isDisposed, isEqual, isPending, isStatic, isWrappable, latest, mapArray, merge, omit, onCleanup, onFlush, onSettled, reconcile, refresh, repeat, resetErrorHalt, resolve, runWithOwner, setReadWatch, setSignalIdentities, setWriteHook, signalName, snapshot, storeName, until, untrack } from '@solidjs/signals';
+ 
+@@ -31,6 +32,7 @@ function createContext(defaultValue, options) {
+   }
+   provider.id = id;
+   provider.defaultValue = defaultValue;
++  provider.Provider = provider;
+   if (arguments.length && defaultValue === undefined) provider._undefinedDefault = true;
+   return provider;
+ }
+@@ -1749,4 +1751,84 @@ if (globalThis) {
+ }
+ installConsoleFooter();
+ 
+-export { $DEVCOMP, DEV, Errored, For, Hydration, Loading, Match, NoHydration, OBSERVE, Repeat, Reveal, Show, Switch, UNASKED, adoptedAnswerStream, applyPatches, beginEdgesRender, children, createComponent, createContext, createDeferred, createEffect, createErrorBoundary, createLoadingBoundary, createMemo, createOptimistic, createOptimisticStore, createProjection, createRenderEffect, createRevealOrder, createRoot, createSignal, createStore, createUniqueId, creationStamp, dynamicComponent, dynamicCore, enableHydration, enableServerComponentHydration, forwardIteratorReturn, from, getProjectionTrace, hasLoadingWindow, inLiveServerComponentScope, inServerComponentScope, isAsyncIterable, isHydratable, isHydrating, lazy, lazyModule, markTopLevelSnapshotScope, noHydrationId, onHydrationEnd, readHydratedValue, readSerializedOrCompute, reportServerError, runInServerComponentScope, shareAsyncIterable, sharedConfig, ssrHandleError, ssrSanitizeError, ssrScope, subFetch, syncThenable, trackFillReads, useContext, withHydrationGate, wrapFirstYield };
++export { $DEVCOMP, DEV, Errored, For, Hydration, Loading, Match, NoHydration, OBSERVE, Repeat, Reveal, Show, Switch, UNASKED, adoptedAnswerStream, applyPatches, beginEdgesRender, children, createComponent, createContext, createDeferred, /* createEffect, */ createErrorBoundary, createLoadingBoundary, createMemo, createOptimistic, createOptimisticStore, createProjection, createRenderEffect, createRevealOrder, createRoot, /* createSignal, */ createStore, createUniqueId, creationStamp, dynamicComponent, dynamicCore, enableHydration, enableServerComponentHydration, forwardIteratorReturn, from, getProjectionTrace, hasLoadingWindow, inLiveServerComponentScope, inServerComponentScope, isAsyncIterable, isHydratable, isHydrating, lazy, lazyModule, markTopLevelSnapshotScope, noHydrationId, onHydrationEnd, readHydratedValue, readSerializedOrCompute, reportServerError, runInServerComponentScope, shareAsyncIterable, sharedConfig, ssrHandleError, ssrSanitizeError, ssrScope, subFetch, syncThenable, trackFillReads, useContext, withHydrationGate, wrapFirstYield };
++
++function compatCreateEffect(compute, effect, options) {
++  if (typeof effect !== "function") {
++    return createRenderEffect$1(compute, () => {}, options);
++  }
++  return _origCreateEffect(compute, effect, options);
++}
++
++function onMount(fn) {
++  const o = typeof getOwner === "function" ? getOwner() : null;
++  queueMicrotask(() => {
++    try {
++      if (o && typeof runWithOwner === "function") {
++        runWithOwner(o, () => {
++          const cleanup = fn();
++          if (typeof cleanup === "function") onCleanup(cleanup);
++        });
++      } else {
++        const cleanup = fn();
++        if (typeof cleanup === "function") onCleanup(cleanup);
++      }
++    } catch (e) {
++      console.error(e);
++    }
++  });
++}
++function mergeProps(...sources) {
++  return merge(...sources);
++}
++function on(deps, fn, options) {
++  const isArray = Array.isArray(deps);
++  let prevInput;
++  let defer = options?.defer;
++  return (prevValue) => {
++    let input;
++    if (isArray) {
++      input = Array(deps.length);
++      for (let i = 0; i < deps.length; i++) input[i] = deps[i]();
++    } else {
++      input = deps();
++    }
++    if (defer) {
++      defer = false;
++      return undefined;
++    }
++    const result = untrack(() => fn(input, prevInput, prevValue));
++    prevInput = input;
++    return result;
++  };
++}
++function splitProps(props, ...descriptors) {
++  const result = descriptors.map(() => ({}));
++  const other = {};
++  const keys = new Set(descriptors.flat());
++  const allKeys = Object.keys(props);
++  for (const key of allKeys) {
++    if (!keys.has(key)) {
++      Object.defineProperty(other, key, {
++        get: () => props[key],
++        enumerable: true,
++        configurable: true,
++      });
++    }
++  }
++  for (let i = 0; i < descriptors.length; i++) {
++    for (const key of descriptors[i]) {
++      Object.defineProperty(result[i], key, {
++        get: () => props[key],
++        enumerable: true,
++        configurable: true,
++      });
++    }
++  }
++  result.push(other);
++  return result;
++}
++function compatCreateSignal(v, options) {
++  return createSignal$1(v, { ...options, ownedWrite: true });
++}
++export { onMount, mergeProps, splitProps, on, compatCreateEffect as createEffect, compatCreateSignal as createSignal };
+diff --git a/dist/solid.js b/dist/solid.js
+index 5393b4055774fc765dbe5001faf5cecd5315a7a8..00126d2c4b484e640eb7c199129f3e0063c2ef3b 100644
+--- a/dist/solid.js
++++ b/dist/solid.js
+@@ -1,3 +1,4 @@
++import { onSettled, merge, createEffect as _origCreateEffect } from "@solidjs/signals";
+ import { from as from$1, createMemo as createMemo$1, flatten, getContext, createRoot as createRoot$1, setContext, peekNextChildId, getOwner, createSignal as createSignal$1, setSnapshotCapture, createOwner, runWithOwner, createDeferred as createDeferred$1, createEffect as createEffect$1, createErrorBoundary as createErrorBoundary$1, createLoadingBoundary as createLoadingBoundary$1, createOptimistic as createOptimistic$1, createOptimisticStore as createOptimisticStore$1, createProjection as createProjection$1, createRenderEffect as createRenderEffect$1, createRevealOrder as createRevealOrder$1, createStore as createStore$1, releaseSnapshotScope, markSnapshotScope, clock, NotReadyError, getNextChildId, clearSnapshots, flush, onCleanup, isDisposed, untrack, repeat, mapArray } from '@solidjs/signals';
+ export { $PROXY, $TRACK, NotReadyError, ROOT_ERROR_HOOK, TimeoutError, action, affects, configureClientErrors, createOwner, createReaction, createTrackedEffect, deep, enableExternalSource, enforceLoadingBoundary, flatten, flush, getNextChildId, getObserver, getOwner, isDisposed, isEqual, isPending, isStatic, isWrappable, latest, mapArray, merge, omit, onCleanup, onFlush, onSettled, reconcile, refresh, repeat, resetErrorHalt, resolve, runWithOwner, setReadWatch, setSignalIdentities, setWriteHook, signalName, snapshot, storeName, until, untrack } from '@solidjs/signals';
+ 
+@@ -28,6 +29,7 @@ function createContext(defaultValue, options) {
+   }
+   provider.id = id;
+   provider.defaultValue = defaultValue;
++  provider.Provider = provider;
+   return provider;
+ }
+ function useContext(context) {
+@@ -1653,4 +1655,84 @@ function shareAsyncIterable(source) {
+ const OBSERVE = undefined;
+ const DEV = undefined;
+ 
+-export { $DEVCOMP, DEV, Errored, For, Hydration, Loading, Match, NoHydration, OBSERVE, Repeat, Reveal, Show, Switch, UNASKED, adoptedAnswerStream, applyPatches, beginEdgesRender, children, createComponent, createContext, createDeferred, createEffect, createErrorBoundary, createLoadingBoundary, createMemo, createOptimistic, createOptimisticStore, createProjection, createRenderEffect, createRevealOrder, createRoot, createSignal, createStore, createUniqueId, creationStamp, dynamicComponent, dynamicCore, enableHydration, enableServerComponentHydration, forwardIteratorReturn, from, getProjectionTrace, hasLoadingWindow, inLiveServerComponentScope, inServerComponentScope, isAsyncIterable, isHydratable, isHydrating, lazy, lazyModule, markTopLevelSnapshotScope, noHydrationId, onHydrationEnd, readHydratedValue, readSerializedOrCompute, reportServerError, runInServerComponentScope, shareAsyncIterable, sharedConfig, ssrHandleError, ssrSanitizeError, ssrScope, subFetch, syncThenable, trackFillReads, useContext, withHydrationGate, wrapFirstYield };
++export { $DEVCOMP, DEV, Errored, For, Hydration, Loading, Match, NoHydration, OBSERVE, Repeat, Reveal, Show, Switch, UNASKED, adoptedAnswerStream, applyPatches, beginEdgesRender, children, createComponent, createContext, createDeferred, /* createEffect, */ createErrorBoundary, createLoadingBoundary, createMemo, createOptimistic, createOptimisticStore, createProjection, createRenderEffect, createRevealOrder, createRoot, /* createSignal, */ createStore, createUniqueId, creationStamp, dynamicComponent, dynamicCore, enableHydration, enableServerComponentHydration, forwardIteratorReturn, from, getProjectionTrace, hasLoadingWindow, inLiveServerComponentScope, inServerComponentScope, isAsyncIterable, isHydratable, isHydrating, lazy, lazyModule, markTopLevelSnapshotScope, noHydrationId, onHydrationEnd, readHydratedValue, readSerializedOrCompute, reportServerError, runInServerComponentScope, shareAsyncIterable, sharedConfig, ssrHandleError, ssrSanitizeError, ssrScope, subFetch, syncThenable, trackFillReads, useContext, withHydrationGate, wrapFirstYield };
++
++function compatCreateEffect(compute, effect, options) {
++  if (typeof effect !== "function") {
++    return createRenderEffect$1(compute, () => {}, options);
++  }
++  return _origCreateEffect(compute, effect, options);
++}
++
++function onMount(fn) {
++  const o = typeof getOwner === "function" ? getOwner() : null;
++  queueMicrotask(() => {
++    try {
++      if (o && typeof runWithOwner === "function") {
++        runWithOwner(o, () => {
++          const cleanup = fn();
++          if (typeof cleanup === "function") onCleanup(cleanup);
++        });
++      } else {
++        const cleanup = fn();
++        if (typeof cleanup === "function") onCleanup(cleanup);
++      }
++    } catch (e) {
++      console.error(e);
++    }
++  });
++}
++function mergeProps(...sources) {
++  return merge(...sources);
++}
++function on(deps, fn, options) {
++  const isArray = Array.isArray(deps);
++  let prevInput;
++  let defer = options?.defer;
++  return (prevValue) => {
++    let input;
++    if (isArray) {
++      input = Array(deps.length);
++      for (let i = 0; i < deps.length; i++) input[i] = deps[i]();
++    } else {
++      input = deps();
++    }
++    if (defer) {
++      defer = false;
++      return undefined;
++    }
++    const result = untrack(() => fn(input, prevInput, prevValue));
++    prevInput = input;
++    return result;
++  };
++}
++function splitProps(props, ...descriptors) {
++  const result = descriptors.map(() => ({}));
++  const other = {};
++  const keys = new Set(descriptors.flat());
++  const allKeys = Object.keys(props);
++  for (const key of allKeys) {
++    if (!keys.has(key)) {
++      Object.defineProperty(other, key, {
++        get: () => props[key],
++        enumerable: true,
++        configurable: true,
++      });
++    }
++  }
++  for (let i = 0; i < descriptors.length; i++) {
++    for (const key of descriptors[i]) {
++      Object.defineProperty(result[i], key, {
++        get: () => props[key],
++        enumerable: true,
++        configurable: true,
++      });
++    }
++  }
++  result.push(other);
++  return result;
++}
++function compatCreateSignal(v, options) {
++  return createSignal$1(v, { ...options, ownedWrite: true });
++}
++export { onMount, mergeProps, splitProps, on, compatCreateEffect as createEffect, compatCreateSignal as createSignal };
+diff --git a/package.json b/package.json
+index 9b2c62e73a6acc8843118bec86e27e006072ec4b..96c8869534bea084ad3b96046777dfbc2d2ae3d0 100644
+--- a/package.json
++++ b/package.json
+@@ -109,7 +109,11 @@
+       "types": "./types/client/container-trace.d.ts",
+       "default": "./dist/container-trace.js"
+     },
+-    "./package.json": "./package.json"
++    "./package.json": "./package.json",
++    "./web": {
++      "types": "./types/index.d.ts",
++      "default": "./dist/web.js"
++    }
+   },
+   "scripts": {
+     "build": "npm-run-all -nl build:*",
+diff --git a/types/index.d.ts b/types/index.d.ts
+index 0eafe7ff349042fa7d83ca3e7db8018c27aa1357..65f8de54eda9ec5932f1bc31ed361af7c6ee241d 100644
+--- a/types/index.d.ts
++++ b/types/index.d.ts
+@@ -33,3 +33,4 @@ export type { ChangeOrigin } from "@solidjs/signals/attribution";
+ declare global {
+     var Solid$$: boolean;
+ }
++export type { JSX, ComponentProps } from "@solidjs/web";
